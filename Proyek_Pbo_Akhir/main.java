@@ -343,7 +343,6 @@ public class main {
         switch (pilih) {
             case 1:
                 String kadaluarsa = inputTanggalKadaluarsa();
-                System.out.print("Kategori obat (Tablet atau sirup): ");
                 String kategori = inputKategoriObat();
 
                 String dosis = "";
