@@ -1,3 +1,6 @@
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
 public class main {
@@ -74,6 +77,21 @@ public class main {
         }
     }
 
+    private static boolean inputButuhResepDokter() {
+        while (true) {
+            System.out.print("Butuh resep dokter? (Iya/Y / Tidak/No/N): ");
+            String input = scanner.nextLine().trim().toUpperCase();
+
+            if (input.equals("IYA") || input.equals("Y")) {
+                return true;
+            } else if (input.equals("TIDAK") || input.equals("NO") || input.equals("N")) {
+                return false;
+            } else {
+                System.out.println("Input salah! Harap jawab dengan Iya, Y, Tidak, No, atau N.");
+            }
+        }
+    }
+
     private static void lihatDataSupplier() {
         System.out.println("\n=== DATA SUPPLIER ===");
         for (int i = 0; i < suppliers.length; i++) {
@@ -83,6 +101,21 @@ public class main {
 
             if ((i + 1) % 2 == 0) {
                 System.out.println("------------------------");
+            }
+        }
+    }
+
+    private static String inputTanggalKadaluarsa() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        while (true) {
+            System.out.print("Tanggal Kadaluarsa (dd-MM-yyyy): ");
+            String input = scanner.nextLine().trim();
+
+            try {
+                LocalDate.parse(input, formatter);
+                return input; // valid, kembalikan string tanggal
+            } catch (DateTimeParseException e) {
+                System.out.println("Format tanggal salah! Harap masukkan dengan format dd-MM-yyyy.");
             }
         }
     }
@@ -296,9 +329,7 @@ public class main {
         Barang newBarang = null;
         switch (pilih) {
             case 1:
-                System.out.print("Tanggal Kadaluarsa (dd-MM-yyyy): ");
-                String kadaluarsa = scanner.nextLine();
-
+                String kadaluarsa = inputTanggalKadaluarsa();
                 System.out.print("Kategori obat (Tablet atau sirup): ");
                 String kategori = scanner.nextLine().trim();
 
@@ -307,10 +338,8 @@ public class main {
                     System.out.print("Masukkan dosis: ");
                     dosis = scanner.nextLine().trim();
                 }
-                // Menambahkan input apakah obat butuh resep dokter
-                System.out.print("Butuh resep dokter? (Y/N): ");
-                String inputResep = scanner.nextLine().trim().toUpperCase();
-                boolean butuhResep = inputResep.equals("Y");
+
+                boolean butuhResep = inputButuhResepDokter();
                 newBarang = new Obat(nama, hargaJual, stok, kadaluarsa, kategori, dosis, butuhResep, supplierTerpilih);
                 break;
             case 2:
@@ -324,8 +353,7 @@ public class main {
                 newBarang = new AlatMedis(nama, hargaJual, stok, tipe, supplierTerpilih);
                 break;
             case 4:
-                System.out.print("Tanggal Kadaluarsa (dd-MM-yyyy): ");
-                String kd = scanner.nextLine();
+                String kd = inputTanggalKadaluarsa();
                 newBarang = new MakanMinum(nama, hargaJual, stok, kd, supplierTerpilih);
                 break;
         }
@@ -431,23 +459,26 @@ public class main {
             System.out.println("2. Jamu");
             System.out.println("3. Alat Medis");
             System.out.println("4. Makanan/Minuman");
+            System.out.println("5. Kembali ke Menu Utama");
 
             int jenisPilih = 0;
             while (true) {
                 System.out.print("Pilihan: ");
                 try {
                     jenisPilih = Integer.parseInt(scanner.nextLine());
-                    if (jenisPilih >= 1 && jenisPilih <= 4)
+                    if (jenisPilih >= 1 && jenisPilih <= 5)
                         break;
                     else
-                        System.out.println("Pilihan harus antara 1-4.");
+                        System.out.println("Pilihan harus antara 1-5.");
                 } catch (NumberFormatException e) {
                     System.out.println("Input tidak valid, masukkan angka.");
                 }
             }
 
-            System.out.println("\nDaftar barang:");
-
+            if (jenisPilih == 5) {
+                System.out.println("Kembali ke menu utama...");
+                return; // keluar dari prosesPenjualan(), kembali ke menu utama
+            }
             int count = 0;
             for (int i = 0; i < barangCount; i++) {
                 String jenisBarang = daftarBarang[i].getClass().getSimpleName().toLowerCase();
