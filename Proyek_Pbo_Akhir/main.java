@@ -112,8 +112,15 @@ public class main {
             String input = scanner.nextLine().trim();
 
             try {
-                LocalDate.parse(input, formatter);
-                return input; // valid, kembalikan string tanggal
+                LocalDate tanggal = LocalDate.parse(input, formatter);
+                int tahun = tanggal.getYear();
+                int tahunSekarang = LocalDate.now().getYear();
+
+                if (tahun < tahunSekarang || tahun > 2030) {
+                    System.out.println("Tahun harus antara " + tahunSekarang + " sampai 2030.");
+                    continue; // ulang input
+                }
+                return input; // valid dan tahun sesuai rentang
             } catch (DateTimeParseException e) {
                 System.out.println("Format tanggal salah! Harap masukkan dengan format dd-MM-yyyy.");
             }
