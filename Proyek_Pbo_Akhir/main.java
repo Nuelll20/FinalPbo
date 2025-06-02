@@ -120,6 +120,19 @@ public class main {
         }
     }
 
+    private static String inputKategoriObat() {
+        while (true) {
+            System.out.print("Kategori obat (Tablet atau Sirup): ");
+            String input = scanner.nextLine().trim();
+
+            if (input.equalsIgnoreCase("Tablet") || input.equalsIgnoreCase("Sirup")) {
+                return input;
+            } else {
+                System.out.println("Input salah! Harap masukkan 'Tablet' atau 'Sirup'.");
+            }
+        }
+    }
+
     private static void tambahBarang() {
         System.out.println("\n=== TAMBAH BARANG ===");
         System.out.println("1. Tambah Obat");
@@ -331,7 +344,7 @@ public class main {
             case 1:
                 String kadaluarsa = inputTanggalKadaluarsa();
                 System.out.print("Kategori obat (Tablet atau sirup): ");
-                String kategori = scanner.nextLine().trim();
+                String kategori = inputKategoriObat();
 
                 String dosis = "";
                 if (kategori.equals("Tablet")) {
