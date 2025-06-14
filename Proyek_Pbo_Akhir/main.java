@@ -1,12 +1,17 @@
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.Scanner;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class main {
-    private static Supplier[] suppliers = new Supplier[8];
+    private static Supplier[] suppliers = new Supplier[9]; // nilai dummy
+    private static int supplierCount = 0;
     private static Barang[] daftarBarang = new Barang[100];
     private static int barangCount = 0;
+
+    private static Transaksi[] daftarTransaksi = new Transaksi[100];
+    private static int transaksiCount = 0;
 
     private static Pembeli[] daftarPembeli = new Pembeli[100];
     private static int pembeliCount = 0;
@@ -14,15 +19,33 @@ public class main {
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
-        // Inisialisasi supplier
-        suppliers[0] = new Supplier("Seta", "PT Sehat Jaya", "021-123456");
-        suppliers[1] = new Supplier("Kengki", "CV Sehat Makmur", "021-654321");
-        suppliers[2] = new Supplier("Petrus", "PT Jamu Prima", "022-111222");
-        suppliers[3] = new Supplier("Bintang", "CV Jamu Sejahtera", "022-333444");
-        suppliers[4] = new Supplier("Xander", "PT Medis Sehat", "023-555666");
-        suppliers[5] = new Supplier("Carlos", "CV Alat Medis", "023-777888");
-        suppliers[6] = new Supplier("Burjo", "PT Makanan Segar", "024-999000");
-        suppliers[7] = new Supplier("OU 23", "CV Minuman Mantap", "024-111222");
+        tambahSupplier(new Supplier("PT Sehat Jaya", "SETA69", "021-123456", "Obat"));
+        tambahSupplier(new Supplier("CV Sehat Makmur", "KENGKI01", "021-654321", "Obat"));
+        tambahSupplier(new Supplier("PT Jamu Prima", "PTR1U", "022-111222", "Jamu"));
+        tambahSupplier(new Supplier("CV Jamu Sejahtera", "BTG667", "022-333444", "Jamu"));
+        tambahSupplier(new Supplier("PT Medis Sehat", "XND1R", "023-555666", "Alat medis"));
+        tambahSupplier(new Supplier("CV Alat Medis", "CLS2T", "023-777888", "Alat medis"));
+        tambahSupplier(new Supplier("PT Makanan Segar", "BRJ3U", "024-999000", "Makanan"));
+        tambahSupplier(new Supplier("CV Minuman Mantap", "OU23T", "024-111222", "Minuman"));
+
+        daftarBarang[0] = new Obat(
+                "Paracetamol", "20-12-2025", "Diminum", "Y", "3x sehari", "Tablet",
+                "OBT001", "Paracetamol", 500, 1000, 50, suppliers[0]);
+
+        daftarBarang[1] = new Jamu(
+                "Tolak Angin", "Meredakan masuk angin", "Sido Muncul", "10-11-2024",
+                "JMU001", "Tolak Angin", 1200, 2500, 30, suppliers[2]);
+
+        daftarBarang[2] = new AlatMedis(
+                "Termometer", "Mengukur suhu tubuh", "Omron",
+                "ALT001", "Termometer Digital", 15000, 30000, 10, suppliers[5]);
+        ((AlatMedis) daftarBarang[2]).setBerat(150);
+
+        daftarBarang[3] = new MakanMinum(
+                "Roti", "01-08-2024", "Susu",
+                "MKM001", "Roti & Susu", 3000, 6000, 20, suppliers[6]);
+
+        barangCount = 4; // Jumlah data awal yang diisi
 
         boolean running = true;
         while (running) {
@@ -33,9 +56,10 @@ public class main {
             System.out.println("4. Cari Barang Berdasarkan Nama");
             System.out.println("5. Cek Barang Kedaluwarsa");
             System.out.println("6. Penjualan & Cetak Nota");
-            System.out.println("7. Laporan Supplier (Perbandingan Harga)");
-            System.out.println("8. Keluar");
-            System.out.print("Pilih menu: ");
+            System.out.println("7. Lihat Semua Transaksi");
+            System.out.println("8. Lihat Laporan Keuangan");
+            System.out.println("9. Keluar");
+            System.out.print("Pilih menu (1-9): ");
 
             int pilihan = 0;
             try {
@@ -47,27 +71,445 @@ public class main {
 
             switch (pilihan) {
                 case 1:
-                    lihatDataSupplier();
+                    System.out.println("\n=== DAFTAR SUPPLIER ===");
+                    String garis = "+-----+----------------------+------------+-----------------+";
+                    String format = "| %-3s | %-20s | %-10s | %-15s |\n";
+
+                    System.out.println(garis);
+                    System.out.printf(format, "No", "Nama Perusahaan", "Kode", "No. Telepon");
+                    System.out.println(garis);
+
+                    if (supplierCount == 0) {
+                        System.out.println("| Tidak ada supplier yang tersedia.                                  |");
+                    } else {
+                        for (int i = 0; i < supplierCount; i++) {
+                            try {
+                                Supplier s = suppliers[i];
+                                if (s != null) {
+                                    System.out.printf(format, (i + 1), s.getNamaPerusahaan(), s.getKode(), s.getNoHp());
+                                }
+                            } catch (Exception e) {
+                                System.out.printf("| %3d | Error membaca supplier.                           |\n",
+                                        i + 1);
+                            }
+                        }
+                    }
+
+                    System.out.println(garis);
                     break;
-                case 2:
-                    tambahBarang();
+
+                case 2: {
+                    System.out.println("=== TAMBAH BARANG ===");
+
+                    int jenis = 0;
+                    while (true) {
+                        System.out.println("1. Obat");
+                        System.out.println("2. Jamu");
+                        System.out.println("3. Alat Medis");
+                        System.out.println("4. Makanan/Minuman");
+                        System.out.print("Pilih jenis barang (1-4): ");
+
+                        try {
+                            jenis = Integer.parseInt(scanner.nextLine());
+                            if (jenis >= 1 && jenis <= 4)
+                                break;
+                            else
+                                System.out.println("Jenis barang tidak valid. Harus 1-4.");
+                        } catch (NumberFormatException e) {
+                            System.out.println("Input harus berupa angka.");
+                        }
+                    }
+                    // Pilih supplier berdasarkan kode
+                    Supplier pemasok = null;
+                    while (pemasok == null) {
+                        System.out.println("Daftar Supplier untuk jenis: " + (jenis == 1 ? "Obat"
+                                : jenis == 2 ? "Jamu" : jenis == 3 ? "Alat Medis" : "Makan/Minum"));
+                        String kategoriDicari = switch (jenis) {
+                            case 1 -> "Obat";
+                            case 2 -> "Jamu";
+                            case 3 -> "Alat Medis";
+                            case 4 -> "Makan/Minum";
+                            default -> "";
+                        };
+                        while (pemasok == null) {
+                            for (int i = 0; i < supplierCount; i++) {
+                                Supplier s = suppliers[i];
+                                if (s.getKategori().equalsIgnoreCase(kategoriDicari)) {
+                                    System.out.printf("- %s (%s)\n", s.getNamaPerusahaan(), s.getKode());
+                                }
+                            }
+
+                            System.out.print("Masukkan KODE Supplier: ");
+                            String kodeInput = scanner.nextLine();
+                            for (int i = 0; i < supplierCount; i++) {
+                                if (suppliers[i].getKode().equalsIgnoreCase(kodeInput)
+                                        && suppliers[i].getKategori().equalsIgnoreCase(kategoriDicari)) {
+                                    pemasok = suppliers[i];
+                                    break;
+                                }
+                            }
+
+                            if (pemasok == null) {
+                                System.out.println("Kode supplier tidak cocok dengan kategori, coba lagi.");
+                            }
+                        }
+                    }
+
+                    Barang barangBaru = null;
+
+                    if (jenis == 1) {
+                        System.out.println("--- INPUT DATA OBAT ---");
+                        System.out.print("Nama Obat: ");
+                        String namaObat = scanner.nextLine();
+
+                        System.out.print("Kode Obat: ");
+                        String kode = scanner.nextLine();
+
+                        // Kadaluarsa default ke hari ini
+                        LocalDate today = LocalDate.now();
+                        String kadaluarsa = String.format("%02d-%02d-%d", today.getDayOfMonth(), today.getMonthValue(),
+                                today.getYear());
+
+                        System.out.print("Cara Penggunaan: ");
+                        String caraPenggunaan = scanner.nextLine();
+
+                        System.out.print("Resep Dokter (Y/N): ");
+                        String resep = scanner.nextLine();
+
+                        System.out.print("Dosis: ");
+                        String dosis = scanner.nextLine();
+
+                        System.out.print("Jenis Obat (Tablet/Sirup): ");
+                        String jenisObat = scanner.nextLine();
+
+                        // ---- Submenu Atur Harga ----
+                        System.out.println("--- ATUR HARGA ---");
+                        double hargaBeli = 0, hargaJual = 0;
+                        int stok = 0;
+
+                        while (true) {
+                            try {
+                                System.out.print("Harga Beli: ");
+                                hargaBeli = Double.parseDouble(scanner.nextLine());
+
+                                System.out.print("Harga Jual: ");
+                                hargaJual = Double.parseDouble(scanner.nextLine());
+
+                                System.out.print("Stok: ");
+                                stok = Integer.parseInt(scanner.nextLine());
+                                break;
+                            } catch (NumberFormatException e) {
+                                System.out.println("Input harga atau stok tidak valid. Coba lagi.");
+                            }
+                        }
+
+                        barangBaru = new Obat(namaObat, kadaluarsa, caraPenggunaan, resep, dosis, jenisObat,
+                                kode, namaObat, hargaBeli, hargaJual, stok, pemasok);
+                    }
+
+                    if (barangBaru != null) {
+                        daftarBarang[barangCount++] = barangBaru;
+                        System.out.println("Barang berhasil ditambahkan:");
+                        barangBaru.tampilkanInfo();
+                    }
+
                     break;
-                case 3:
-                    tampilSemuaBarang();
+                }
+                case 3: {
+                    tampilkanSemuaBarangDalamTabel();
                     break;
+                }
                 case 4:
-                    cariBarang();
+                    System.out.print("Masukkan nama barang: ");
+                    String cari = scanner.nextLine();
+                    boolean ditemukan = false;
+
+                    for (int i = 0; i < barangCount; i++) {
+                        Barang b = daftarBarang[i];
+
+                        if (b.getNamaBarang().equalsIgnoreCase(cari)) {
+                            System.out.println("\n=== INFORMASI BARANG DITEMUKAN ===");
+                            System.out.println("Jenis: " + (b instanceof Obat ? "Obat"
+                                    : b instanceof Jamu ? "Jamu"
+                                            : b instanceof AlatMedis ? "Alat Medis"
+                                                    : b instanceof MakanMinum ? "Makanan/Minuman" : "Tidak Diketahui"));
+                            b.tampilkanInfo(); // Akan otomatis memanggil implementasi sesuai subclass
+                            ditemukan = true;
+                        }
+                    }
+                    if (!ditemukan) {
+                        System.out.println("Barang dengan nama tersebut tidak ditemukan.");
+                    }
                     break;
-                case 5:
-                    cekKadaluwarsa();
+                case 5: {
+                    boolean adaKadaluarsa = false;
+
+                    System.out.println("\n=== BARANG KADALUWARSA ===");
+                    String line = "+----+---------------+------------------------+------------+------------+------+----------------------+\n";
+                    String header = "| No | Jenis         | Nama Barang            | Harga Beli | Harga Jual | Stok | Kadaluarsa           |\n";
+
+                    System.out.print(line);
+                    System.out.print(header);
+                    System.out.print(line);
+
+                    int no = 1;
+                    for (int i = 0; i < barangCount; i++) {
+                        Barang b = daftarBarang[i];
+                        if (b.cekKadaluwarsa()) {
+                            String jenis = (b instanceof Obat) ? "Obat"
+                                    : (b instanceof Jamu) ? "Jamu"
+                                            : (b instanceof AlatMedis) ? "Alat Medis"
+                                                    : (b instanceof MakanMinum) ? "Makan/Minum" : "Lainnya";
+
+                            String kadaluarsa = "-";
+                            if (b instanceof Obat obat)
+                                kadaluarsa = obat.getKadaluarsa();
+                            if (b instanceof Jamu jamu)
+                                kadaluarsa = jamu.getKadaluarsa();
+                            if (b instanceof MakanMinum mm)
+                                kadaluarsa = mm.getKadaluarsa();
+
+                            System.out.printf("| %-2d | %-13s | %-22s | %-10.0f | %-10.0f | %-4d | %-20s |\n",
+                                    no++,
+                                    jenis,
+                                    b.getNamaBarang(),
+                                    b.getHargaBeli(),
+                                    b.getHargaJual(),
+                                    b.getStok(),
+                                    kadaluarsa);
+
+                            adaKadaluarsa = true;
+                        }
+                    }
+
+                    if (!adaKadaluarsa) {
+                        System.out.println(
+                                "| Tidak ada barang yang kadaluwarsa.                                                           |");
+                    }
+
+                    System.out.print(line);
                     break;
-                case 6:
-                    prosesPenjualan();
+                }
+
+                case 6: {
+                    System.out.println("=== PENJUALAN & CETAK NOTA ===");
+
+                    // Input nama & cari pembeli
+                    System.out.print("Masukkan nama pembeli: ");
+                    String namaPembeli = scanner.nextLine().trim();
+
+                    Pembeli pembeli = null;
+                    for (int i = 0; i < pembeliCount; i++) {
+                        if (daftarPembeli[i] != null
+                                && daftarPembeli[i].getNama().equalsIgnoreCase(namaPembeli)) {
+                            pembeli = daftarPembeli[i];
+                            break;
+                        }
+                    }
+
+                    if (pembeli == null) {
+                        // Input baru
+                        System.out.print("Masukkan alamat pembeli: ");
+                        String alamatPembeli = scanner.nextLine();
+
+                        String noHpPembeli;
+                        while (true) {
+                            System.out.print("Masukkan No HP pembeli (hanya angka): ");
+                            noHpPembeli = scanner.nextLine().trim();
+                            if (noHpPembeli.matches("\\d+"))
+                                break;
+                            System.out.println("Nomor HP tidak valid. Harus hanya angka.");
+                        }
+
+                        pembeli = new Pembeli(namaPembeli, alamatPembeli, noHpPembeli);
+                        daftarPembeli[pembeliCount++] = pembeli;
+                    } else {
+                        // Tampilkan data lama
+                        System.out.println("Data pembeli ditemukan:");
+                        System.out.println("- Nama   : " + pembeli.getNama());
+                        System.out.println("- Alamat : " + pembeli.getAlamat());
+                        System.out.println("- No HP  : " + pembeli.getNoHp());
+                    }
+
+                    // Pilih jenis barang
+                    int jenis;
+                    while (true) {
+                        System.out.println("Pilih jenis barang:");
+                        System.out.println("1. Obat");
+                        System.out.println("2. Jamu");
+                        System.out.println("3. Alat Medis");
+                        System.out.println("4. Makanan/Minuman");
+                        System.out.print("Pilihan (1-4): ");
+                        try {
+                            jenis = Integer.parseInt(scanner.nextLine());
+                            if (jenis >= 1 && jenis <= 4)
+                                break;
+                        } catch (NumberFormatException ignored) {
+                        }
+                        System.out.println("Input salah. Harus angka.");
+                    }
+
+                    // Tampilkan hanya barang valid (jenis + tidak kadaluarsa)
+                    int[] idxBarang = new int[barangCount];
+                    int count = 0;
+                    System.out.println("\nDaftar Barang Tersedia :");
+                    for (int i = 0; i < barangCount; i++) {
+                        Barang b = daftarBarang[i];
+                        boolean matchJenis = switch (jenis) {
+                            case 1 -> b instanceof Obat;
+                            case 2 -> b instanceof Jamu;
+                            case 3 -> b instanceof AlatMedis;
+                            case 4 -> b instanceof MakanMinum;
+                            default -> false;
+                        };
+                        if (matchJenis && !b.cekKadaluwarsa()) {
+                            System.out.printf("%d. %s (Stok: %d, Harga: Rp %.0f)\n",
+                                    count + 1, b.getNamaBarang(), b.getStok(), b.getHargaJual());
+                            idxBarang[count++] = i;
+                        }
+                    }
+
+                    if (count == 0) {
+                        System.out.println("Tidak ada barang layak untuk dipilih.");
+                        break;
+                    }
+
+                    // Pilih barang
+                    int pilihanBarang;
+                    while (true) {
+                        System.out.print("Pilih barang nomor: ");
+                        try {
+                            pilihanBarang = Integer.parseInt(scanner.nextLine());
+                            if (pilihanBarang >= 1 && pilihanBarang <= count)
+                                break;
+                        } catch (NumberFormatException ignored) {
+                        }
+                        System.out.println("Nomor tidak valid.");
+                    }
+
+                    Barang dipilih = daftarBarang[idxBarang[pilihanBarang - 1]];
+
+                    // Input jumlah beli
+                    int jumlahBeli;
+                    while (true) {
+                        System.out.print("Jumlah yang dibeli: ");
+                        try {
+                            jumlahBeli = Integer.parseInt(scanner.nextLine());
+                            if (jumlahBeli > 0 && jumlahBeli <= dipilih.getStok())
+                                break;
+                            System.out.println("Stok tidak mencukupi!");
+                        } catch (NumberFormatException ignored) {
+                        }
+                    }
+
+                    double total = jumlahBeli * dipilih.getHargaJual();
+                    System.out.printf("Total: Rp %.0f\n", total);
+
+                    double bayar;
+                    while (true) {
+                        System.out.print("Masukkan uang bayar: ");
+                        try {
+                            bayar = Double.parseDouble(scanner.nextLine());
+                            if (bayar >= total)
+                                break;
+                            System.out.println("Uang tidak cukup.");
+                        } catch (NumberFormatException ignored) {
+                        }
+                    }
+
+                    // Proses
+                    dipilih.setStok(dipilih.getStok() - jumlahBeli);
+                    Transaksi trx = new Transaksi(pembeli, dipilih, jumlahBeli);
+                    daftarTransaksi[transaksiCount++] = trx;
+
+                    System.out.println("\n===== NOTA PEMBELIAN =====");
+                    trx.cetakNota(dipilih, jumlahBeli, total, bayar, LocalDate.now());
+                    System.out.println("==========================");
                     break;
-                case 7:
-                    laporanSupplier();
+                }
+                case 7: {
+                    LocalDate hariIni = LocalDate.now();
+                    boolean adaTransaksi = false;
+
+                    System.out.println("\n=== TRANSAKSI HARI INI ===");
+                    System.out.println("Tanggal: " + hariIni);
+                    System.out.println(
+                            "+----+----------------------+----------------------------+--------+--------------+");
+                    System.out.println(
+                            "| No | Nama Pembeli         | Nama Barang                | Jumlah | Total Harga  |");
+                    System.out.println(
+                            "+----+----------------------+----------------------------+--------+--------------+");
+
+                    int no = 1;
+                    for (int i = 0; i < transaksiCount; i++) {
+                        Transaksi t = daftarTransaksi[i];
+                        if (t.getTanggal().equals(hariIni)) {
+                            double totalHarga = t.getItem().getHargaJual() * t.getJumlah();
+                            System.out.printf("| %-2d | %-20s | %-26s | %-6d | Rp %-9.0f |\n",
+                                    no++,
+                                    t.getCustomer().getNama(),
+                                    t.getItem().getNamaBarang(),
+                                    t.getJumlah(),
+                                    totalHarga);
+                            adaTransaksi = true;
+                        }
+                    }
+
+                    if (!adaTransaksi) {
+                        System.out.println(
+                                "| Tidak ada transaksi yang tercatat hari ini.                              |");
+                    }
+
+                    System.out.println(
+                            "+----+----------------------+----------------------------+--------+--------------+");
                     break;
-                case 8:
+                }
+                case 8: {
+                    System.out.println("\n=== LAPORAN KEUANGAN HARI INI ===");
+                    LocalDate today = LocalDate.now();
+
+                    double totalPendapatan = 0;
+                    double totalModal = 0;
+
+                    System.out.println("Daftar Transaksi Hari Ini:");
+                    System.out.printf("%-4s | %-20s | %-6s | %-12s | %-12s\n",
+                            "No", "Nama Barang", "Jumlah", "Pendapatan", "Modal");
+                    System.out.println("---------------------------------------------------------------");
+
+                    int noTrans = 0;
+                    for (int i = 0; i < transaksiCount; i++) {
+                        Transaksi t = daftarTransaksi[i];
+                        if (t.getTanggal().isEqual(today)) {
+                            noTrans++;
+                            Barang b = t.getItem();
+                            int qty = t.getJumlah();
+                            double pendapatan = b.getHargaJual() * qty;
+                            double modal = b.getHargaBeli() * qty;
+
+                            totalPendapatan += pendapatan;
+                            totalModal += modal;
+
+                            System.out.printf("%-4d | %-20s | %-6d | Rp%10.0f | Rp%10.0f\n",
+                                    noTrans, b.getNamaBarang(), qty, pendapatan, modal);
+                        }
+                    }
+
+                    if (noTrans == 0) {
+                        System.out.println("Belum ada transaksi pada hari ini (" + today + ").");
+                    } else {
+                        System.out.println("---------------------------------------------------------------");
+                        double labaBersih = totalPendapatan - totalModal;
+
+                        System.out.printf("Total Pendapatan: Rp %.0f\n", totalPendapatan);
+                        System.out.printf("Total Modal     : Rp %.0f\n", totalModal);
+                        System.out.printf("Laba Bersih     : Rp %.0f — %s\n",
+                                Math.abs(labaBersih),
+                                labaBersih > 0 ? "UNTUNG 👍" : labaBersih < 0 ? "RUGI 👎" : "IMPAS ⚖️");
+                    }
+                    break;
+                }
+
+                case 9:
                     running = false;
                     System.out.println("Terima kasih!");
                     break;
@@ -77,641 +519,57 @@ public class main {
         }
     }
 
-    private static boolean inputButuhResepDokter() {
-        while (true) {
-            System.out.print("Butuh resep dokter? (Iya/Y / Tidak/No/N): ");
-            String input = scanner.nextLine().trim().toUpperCase();
+    private static void tampilkanSemuaBarangDalamTabel() {
+        String garis = "+----+---------------+--------+------------------------------+------------+------+----------------------+----------------------+\n";
+        String header = "| No | Jenis         | Kode   | Nama Barang                  | Harga      | Stok | Kadaluarsa           | Supplier             |\n";
 
-            if (input.equals("IYA") || input.equals("Y")) {
-                return true;
-            } else if (input.equals("TIDAK") || input.equals("NO") || input.equals("N")) {
-                return false;
-            } else {
-                System.out.println("Input salah! Harap jawab dengan Iya, Y, Tidak, No, atau N.");
-            }
-        }
-    }
-
-    private static void lihatDataSupplier() {
-        System.out.println("\n=== DATA SUPPLIER ===");
-        for (int i = 0; i < suppliers.length; i++) {
-            Supplier s = suppliers[i];
-            System.out.printf("Supplier: %s, Perusahaan: %s, No.Telp: %s\n",
-                    s.getNamaSupplier(), s.getNamaPerusahaan(), s.getNoTlp());
-
-            if ((i + 1) % 2 == 0) {
-                System.out.println("------------------------");
-            }
-        }
-    }
-
-    private static String inputTanggalKadaluarsa() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-        while (true) {
-            System.out.print("Tanggal Kadaluarsa (dd-MM-yyyy): ");
-            String input = scanner.nextLine().trim();
-
-            try {
-                LocalDate tanggal = LocalDate.parse(input, formatter);
-                int tahun = tanggal.getYear();
-                int tahunSekarang = LocalDate.now().getYear();
-
-                if (tahun < tahunSekarang || tahun > 2030) {
-                    System.out.println("Tahun harus antara " + tahunSekarang + " sampai 2030.");
-                    continue; // ulang input
-                }
-                return input; // valid dan tahun sesuai rentang
-            } catch (DateTimeParseException e) {
-                System.out.println("Format tanggal salah! Harap masukkan dengan format dd-MM-yyyy.");
-            }
-        }
-    }
-
-    private static String inputKategoriObat() {
-        while (true) {
-            System.out.print("Kategori obat (Tablet atau Sirup): ");
-            String input = scanner.nextLine().trim();
-
-            if (input.equalsIgnoreCase("Tablet") || input.equalsIgnoreCase("Sirup")) {
-                return input;
-            } else {
-                System.out.println("Input salah! Harap masukkan 'Tablet' atau 'Sirup'.");
-            }
-        }
-    }
-
-    private static void tambahBarang() {
-        System.out.println("\n=== TAMBAH BARANG ===");
-        System.out.println("1. Tambah Obat");
-        System.out.println("2. Tambah Jamu");
-        System.out.println("3. Tambah Alat Medis");
-        System.out.println("4. Tambah Makanan/Minuman");
-        System.out.println("5. Kembali ke Menu Utama");
-
-        int pilih = 0;
-        while (true) {
-            System.out.print("Pilih: ");
-            try {
-                pilih = Integer.parseInt(scanner.nextLine());
-                if (pilih >= 1 && pilih <= 5)
-                    break;
-                else
-                    System.out.println("Pilihan harus antara 1 sampai 5.");
-            } catch (NumberFormatException e) {
-                System.out.println("Input tidak valid, masukkan angka.");
-            }
-        }
-        if (pilih == 5)
+        if (barangCount == 0) {
+            System.out.println("Belum ada data barang yang ditambahkan.");
             return;
-
-        Supplier[] pilihanSupplier = new Supplier[2];
-        switch (pilih) {
-            case 1:
-                pilihanSupplier[0] = suppliers[0];
-                pilihanSupplier[1] = suppliers[1];
-                break;
-            case 2:
-                pilihanSupplier[0] = suppliers[2];
-                pilihanSupplier[1] = suppliers[3];
-                break;
-            case 3:
-                pilihanSupplier[0] = suppliers[4];
-                pilihanSupplier[1] = suppliers[5];
-                break;
-            case 4:
-                pilihanSupplier[0] = suppliers[6];
-                pilihanSupplier[1] = suppliers[7];
-                break;
         }
 
-        System.out.println("Pilih Supplier:");
-        System.out.println("1. " + pilihanSupplier[0].getNamaSupplier());
-        System.out.println("2. " + pilihanSupplier[1].getNamaSupplier());
-
-        int pilihSup = 0;
-        while (true) {
-            System.out.print("Masukkan pilihan supplier (1 atau 2): ");
-            try {
-                pilihSup = Integer.parseInt(scanner.nextLine());
-                if (pilihSup == 1 || pilihSup == 2)
-                    break;
-                else
-                    System.out.println("Pilihan supplier harus 1 atau 2.");
-            } catch (NumberFormatException e) {
-                System.out.println("Input tidak valid, masukkan angka 1 atau 2.");
-            }
-        }
-
-        Supplier supplierTerpilih = pilihanSupplier[pilihSup - 1];
-
-        // Cek barang supplier ada atau tidak (sama seperti sebelumnya)
-        Barang barangAda = null;
-        for (int i = 0; i < barangCount; i++) {
-            if (daftarBarang[i].getSupplier() == supplierTerpilih) {
-                barangAda = daftarBarang[i];
-                break;
-            }
-        }
-
-        if (barangAda != null) {
-            System.out.println("Supplier sudah memiliki barang dalam sistem.");
-            System.out.println("Pilih:");
-            System.out.println("1. Tambah stok barang yang sudah ada");
-            System.out.println("2. Buat barang baru");
-
-            int opsi = 0;
-            while (true) {
-                System.out.print("Pilihan: ");
-                try {
-                    opsi = Integer.parseInt(scanner.nextLine());
-                    if (opsi == 1 || opsi == 2)
-                        break;
-                    else
-                        System.out.println("Pilihan harus 1 atau 2.");
-                } catch (NumberFormatException e) {
-                    System.out.println("Input tidak valid, masukkan angka 1 atau 2.");
-                }
-            }
-
-            if (opsi == 1) {
-                System.out.println("Barang dari supplier " + supplierTerpilih.getNamaSupplier() + ":");
-                int countBarangSupplier = 0;
-                for (int i = 0; i < barangCount; i++) {
-                    if (daftarBarang[i].getSupplier() == supplierTerpilih) {
-                        System.out.printf("%d. %s (Stok: %d)\n", countBarangSupplier + 1,
-                                daftarBarang[i].getNamaBarang(), daftarBarang[i].getStok());
-                        countBarangSupplier++;
-                    }
-                }
-                if (countBarangSupplier == 0) {
-                    System.out.println("Tidak ada barang dari supplier ini.");
-                    return;
-                }
-
-                int nomorBarang = 0;
-                while (true) {
-                    System.out.print("Pilih nomor barang untuk ditambah stok: ");
-                    try {
-                        nomorBarang = Integer.parseInt(scanner.nextLine());
-                        if (nomorBarang >= 1 && nomorBarang <= countBarangSupplier)
-                            break;
-                        else
-                            System.out.println("Nomor barang tidak valid.");
-                    } catch (NumberFormatException e) {
-                        System.out.println("Input tidak valid, masukkan angka.");
-                    }
-                }
-
-                Barang barangPilih = null;
-                int hitung = 0;
-                for (int i = 0; i < barangCount; i++) {
-                    if (daftarBarang[i].getSupplier() == supplierTerpilih) {
-                        hitung++;
-                        if (hitung == nomorBarang) {
-                            barangPilih = daftarBarang[i];
-                            break;
-                        }
-                    }
-                }
-
-                int stokTambah = 0;
-                while (true) {
-                    System.out.print("Masukkan jumlah stok tambahan: ");
-                    try {
-                        stokTambah = Integer.parseInt(scanner.nextLine());
-                        if (stokTambah > 0)
-                            break;
-                        else
-                            System.out.println("Jumlah stok harus lebih dari 0.");
-                    } catch (NumberFormatException e) {
-                        System.out.println("Input tidak valid, masukkan angka.");
-                    }
-                }
-
-                barangPilih.stok += stokTambah;
-                System.out.println("Stok berhasil ditambahkan. Stok sekarang: " + barangPilih.getStok());
-                return;
-            } else {
-                System.out.println("Lanjut buat barang baru.");
-            }
-        }
-
-        System.out.print("Nama Barang: ");
-        String nama = scanner.nextLine();
-
-        double markup = 0;
-        switch (pilih) {
-            case 1:
-                markup = 2000;
-                break;
-            case 2:
-                markup = 2000;
-                break;
-            case 3:
-                markup = 10000;
-                break;
-            case 4:
-                markup = 1000;
-                break;
-        }
-
-        double hargaDasar = 0;
-        while (true) {
-            System.out.print("Harga dasar: ");
-            try {
-                hargaDasar = Double.parseDouble(scanner.nextLine());
-                if (hargaDasar > 0)
-                    break;
-                else
-                    System.out.println("Harga harus lebih dari 0.");
-            } catch (NumberFormatException e) {
-                System.out.println("Input tidak valid, masukkan angka.");
-            }
-        }
-
-        double hargaJual = hargaDasar + markup;
-        // Harga jual tidak ditampilkan saat tambah barang
-
-        int stok = 0;
-        while (true) {
-            System.out.print("Stok: ");
-            try {
-                stok = Integer.parseInt(scanner.nextLine());
-                if (stok >= 0)
-                    break;
-                else
-                    System.out.println("Stok harus nol atau lebih.");
-            } catch (NumberFormatException e) {
-                System.out.println("Input tidak valid, masukkan angka.");
-            }
-        }
-
-        Barang newBarang = null;
-        switch (pilih) {
-            case 1:
-                String kadaluarsa = inputTanggalKadaluarsa();
-                String kategori = inputKategoriObat();
-
-                String dosis = "";
-                if (kategori.equals("Tablet")) {
-                    System.out.print("Masukkan dosis: ");
-                    dosis = scanner.nextLine().trim();
-                }
-
-                boolean butuhResep = inputButuhResepDokter();
-                newBarang = new Obat(nama, hargaJual, stok, kadaluarsa, kategori, dosis, butuhResep, supplierTerpilih);
-                break;
-            case 2:
-                System.out.print("Fungsi Jamu: ");
-                String fungsi = scanner.nextLine();
-                newBarang = new Jamu(nama, hargaJual, stok, fungsi, supplierTerpilih);
-                break;
-            case 3:
-                System.out.print("Tipe Alat Medis: ");
-                String tipe = scanner.nextLine();
-                newBarang = new AlatMedis(nama, hargaJual, stok, tipe, supplierTerpilih);
-                break;
-            case 4:
-                String kd = inputTanggalKadaluarsa();
-                newBarang = new MakanMinum(nama, hargaJual, stok, kd, supplierTerpilih);
-                break;
-        }
-
-        if (barangCount < daftarBarang.length) {
-            daftarBarang[barangCount++] = newBarang;
-            System.out.println("Barang berhasil ditambahkan.");
-        } else {
-            System.out.println("Kapasitas barang sudah penuh.");
-        }
-    }
-
-    private static void tampilSemuaBarang() {
-        System.out.println("\n=== DAFTAR SEMUA BARANG ===");
-
-        String format = "| %-3s | %-15s | %-10s | %-7s | %-12s | %-15s |\n";
-        String garis = "+-----+-----------------+------------+---------+--------------+-----------------+";
-
-        System.out.println(garis);
-        System.out.printf(format, "No", "Nama Barang", "Jenis", "Stok", "Harga (Rp)", "Supplier");
-        System.out.println(garis);
+        System.out.print(garis);
+        System.out.print(header);
+        System.out.print(garis);
 
         for (int i = 0; i < barangCount; i++) {
             Barang b = daftarBarang[i];
-            String jenis = b.getClass().getSimpleName();
-            System.out.printf(format,
-                    (i + 1),
-                    b.getNamaBarang(),
+            String jenis = "";
+            String kadaluarsa = "-";
+
+            if (b instanceof Obat obat) {
+                jenis = "Obat";
+                kadaluarsa = obat.getKadaluarsa();
+            } else if (b instanceof Jamu jamu) {
+                jenis = "Jamu";
+                kadaluarsa = jamu.getKadaluarsa();
+            } else if (b instanceof AlatMedis alat) {
+                jenis = "Alat Medis";
+            } else if (b instanceof MakanMinum mm) {
+                jenis = "Makan/Minum";
+                kadaluarsa = mm.getKadaluarsa();
+            }
+
+            System.out.printf("| %-2d | %-13s | %-6s | %-28s | %-10.2f | %-4d | %-20s | %-20s |\n",
+                    i + 1,
                     jenis,
+                    b.getKode(),
+                    b.getNamaBarang(),
+                    b.getHargaJual(),
                     b.getStok(),
-                    String.format("%.2f", b.getHarga()),
-                    b.getSupplier().getNamaSupplier());
+                    kadaluarsa,
+                    b.getPemasok().getNamaPerusahaan());
         }
-        System.out.println(garis);
+
+        System.out.print(garis);
     }
 
-    private static void cariBarang() {
-        System.out.print("\nMasukkan nama barang yang dicari: ");
-        String cariNama = scanner.nextLine();
-        boolean found = false;
-        for (int i = 0; i < barangCount; i++) {
-            if (daftarBarang[i].getNamaBarang().equalsIgnoreCase(cariNama)) {
-                daftarBarang[i].tampilInfo();
-                found = true;
-            }
+    private static void tambahSupplier(Supplier s) {
+        if (supplierCount >= suppliers.length) {
+            Supplier[] temp = new Supplier[suppliers.length * 2];
+            System.arraycopy(suppliers, 0, temp, 0, suppliers.length);
+            suppliers = temp;
         }
-        if (!found)
-            System.out.println("Barang tidak ditemukan.");
-    }
-
-    private static void cekKadaluwarsa() {
-        System.out.println("\n=== CEK BARANG KEDALUWARSA ===");
-        boolean adaKadaluarsa = false;
-        for (int i = 0; i < barangCount; i++) {
-            if (daftarBarang[i].cekKadaluwarsa()) {
-                System.out.print("Barang kadaluwarsa: ");
-                daftarBarang[i].tampilInfo();
-                adaKadaluarsa = true;
-            }
-        }
-        if (!adaKadaluarsa)
-            System.out.println("Tidak ada barang yang kedaluwarsa.");
-    }
-
-    private static void prosesPenjualan() {
-        Pembeli pembeliTerpilih = null;
-
-        if (pembeliCount == 0) {
-            System.out.println("Belum ada data pembeli, silakan tambah pembeli baru.");
-            tambahPembeliBaru();
-        }
-
-        while (pembeliTerpilih == null) {
-            System.out.println("\n=== DAFTAR PEMBELI ===");
-            for (int i = 0; i < pembeliCount; i++) {
-                System.out.printf("%d. %s\n", i + 1, daftarPembeli[i].getNama());
-            }
-            System.out.printf("%d. Tambah Pembeli Baru\n", pembeliCount + 1);
-
-            System.out.print("Pilih pembeli: ");
-            int pilihPembeli = 0;
-            try {
-                pilihPembeli = Integer.parseInt(scanner.nextLine());
-                if (pilihPembeli >= 1 && pilihPembeli <= pembeliCount + 1) {
-                    if (pilihPembeli == pembeliCount + 1) {
-                        tambahPembeliBaru();
-                    } else {
-                        pembeliTerpilih = daftarPembeli[pilihPembeli - 1];
-                    }
-                } else {
-                    System.out.println("Pilihan tidak valid.");
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Input tidak valid.");
-            }
-        }
-
-        boolean ulangPembelian = true;
-
-        while (ulangPembelian) {
-            System.out.println("Pilih jenis barang yang ingin dibeli:");
-            System.out.println("1. Obat");
-            System.out.println("2. Jamu");
-            System.out.println("3. Alat Medis");
-            System.out.println("4. Makanan/Minuman");
-            System.out.println("5. Kembali ke Menu Utama");
-
-            int jenisPilih = 0;
-            while (true) {
-                System.out.print("Pilihan: ");
-                try {
-                    jenisPilih = Integer.parseInt(scanner.nextLine());
-                    if (jenisPilih >= 1 && jenisPilih <= 5)
-                        break;
-                    else
-                        System.out.println("Pilihan harus antara 1-5.");
-                } catch (NumberFormatException e) {
-                    System.out.println("Input tidak valid, masukkan angka.");
-                }
-            }
-
-            if (jenisPilih == 5) {
-                System.out.println("Kembali ke menu utama...");
-                return; // keluar dari prosesPenjualan(), kembali ke menu utama
-            }
-            int count = 0;
-            for (int i = 0; i < barangCount; i++) {
-                String jenisBarang = daftarBarang[i].getClass().getSimpleName().toLowerCase();
-                boolean cocok = false;
-                switch (jenisPilih) {
-                    case 1:
-                        cocok = jenisBarang.equals("obat");
-                        break;
-                    case 2:
-                        cocok = jenisBarang.equals("jamu");
-                        break;
-                    case 3:
-                        cocok = jenisBarang.equals("alatmedis");
-                        break;
-                    case 4:
-                        cocok = jenisBarang.equals("makanminum");
-                        break;
-                }
-                if (cocok) {
-                    count++;
-                    System.out.printf("%d. %s - Harga: %.2f\n", count, daftarBarang[i].getNamaBarang(),
-                            daftarBarang[i].getHarga());
-                }
-            }
-
-            if (count == 0) {
-                System.out.println("Tidak ada barang dari jenis ini.");
-                continue;
-            }
-
-            System.out.print("Masukkan nama barang yang ingin dibeli (ketik persis): ");
-            String namaBarangBeli = scanner.nextLine();
-
-            Barang barangDibeli = null;
-            for (int i = 0; i < barangCount; i++) {
-                if (daftarBarang[i].getNamaBarang().equalsIgnoreCase(namaBarangBeli)) {
-                    barangDibeli = daftarBarang[i];
-                    break;
-                }
-            }
-            if (barangDibeli == null) {
-                System.out.println("Barang tidak ditemukan.");
-                continue;
-            }
-            if (barangDibeli instanceof Obat) {
-                Obat obat = (Obat) barangDibeli;
-                if (obat.isButuhResepDokter()) {
-                    System.out.println("Obat ini memerlukan resep dokter.");
-                    System.out.print("Apakah Anda memiliki resep dokter? (Y/N): ");
-                    String jawaban = scanner.nextLine().trim().toUpperCase();
-                    if (!jawaban.equals("Y")) {
-                        System.out.println("Maaf, pembelian obat ini memerlukan resep dokter.");
-                        continue; // Kembali ke awal loop pembelian
-                    }
-                }
-            }
-            int jumlahBeli = 0;
-            while (true) {
-                System.out.print("Jumlah beli: ");
-                try {
-                    jumlahBeli = Integer.parseInt(scanner.nextLine());
-                    if (jumlahBeli <= 0) {
-                        System.out.println("Jumlah beli harus lebih dari 0.");
-                    } else if (jumlahBeli > barangDibeli.getStok()) {
-                        System.out.println("Stok tidak cukup. Stok tersedia: " + barangDibeli.getStok());
-                        System.out.println("Pilih opsi:");
-                        System.out.println("1. Pilih jenis barang lain");
-                        System.out.println("2. Kembali ke menu utama");
-                        int opsi = 0;
-                        while (true) {
-                            System.out.print("Pilihan: ");
-                            try {
-                                opsi = Integer.parseInt(scanner.nextLine());
-                                if (opsi == 1) {
-                                    break;
-                                } else if (opsi == 2) {
-                                    return;
-                                } else {
-                                    System.out.println("Pilihan harus 1 atau 2.");
-                                }
-                            } catch (NumberFormatException e) {
-                                System.out.println("Input tidak valid, masukkan angka 1 atau 2.");
-                            }
-                        }
-                        if (opsi == 1)
-                            break;
-                    } else {
-                        break;
-                    }
-                } catch (NumberFormatException e) {
-                    System.out.println("Input tidak valid, masukkan angka.");
-                }
-            }
-
-            if (jumlahBeli > barangDibeli.getStok()) {
-                continue;
-            }
-
-            pembeliTerpilih.inputBarang(barangDibeli, jumlahBeli);
-
-            double totalHarga = pembeliTerpilih.getTotalHarga();
-            System.out.printf("Total harga: %.2f\n", totalHarga);
-
-            double uangBayar = 0;
-            boolean bayarCukup = false;
-
-            while (!bayarCukup) {
-                System.out.print("Masukkan uang bayar: ");
-                try {
-                    uangBayar = Double.parseDouble(scanner.nextLine());
-                    if (uangBayar < totalHarga) {
-                        System.out.println("Uang tidak cukup. Silakan masukkan ulang.");
-                    } else {
-                        bayarCukup = true;
-                    }
-                } catch (NumberFormatException e) {
-                    System.out.println("Input tidak valid, masukkan angka.");
-                }
-            }
-
-            double kembalian = uangBayar - totalHarga;
-            barangDibeli.kurangiStok(jumlahBeli);
-
-            pembeliTerpilih.cetakStruk();
-            System.out.printf("Uang Bayar: %.2f\n", uangBayar);
-            System.out.printf("Kembalian : %.2f\n", kembalian);
-
-            System.out.println("\nApakah ingin membeli barang lain? (Y/N)");
-            String jawab = scanner.nextLine();
-            if (!jawab.equalsIgnoreCase("Y")) {
-                ulangPembelian = false;
-            }
-        }
-    }
-
-    private static void tambahPembeliBaru() {
-        System.out.println("\n=== TAMBAH PEMBELI BARU ===");
-        System.out.print("Nama Pembeli: ");
-        String nama = scanner.nextLine();
-        System.out.print("Alamat Pembeli: ");
-        String alamat = scanner.nextLine();
-
-        Pembeli pembeliBaru = new Pembeli();
-        pembeliBaru.inputNama(nama);
-        pembeliBaru.inputAlamat(alamat);
-
-        if (pembeliCount < daftarPembeli.length) {
-            daftarPembeli[pembeliCount++] = pembeliBaru;
-            System.out.println("Pembeli berhasil ditambahkan.");
-        } else {
-            System.out.println("Kapasitas pembeli penuh.");
-        }
-    }
-
-    private static void laporanSupplier() {
-        System.out.println("\n=== LAPORAN SUPPLIER (Perbandingan Harga dan Stok) ===");
-
-        String[] jenisBarang = { "Obat", "Jamu", "Alat Medis", "Makanan/Minuman" };
-
-        for (int i = 0; i < jenisBarang.length; i++) {
-            System.out.println("\n" + jenisBarang[i] + ":");
-
-            Supplier sup1 = suppliers[i * 2];
-            Supplier sup2 = suppliers[i * 2 + 1];
-
-            // Cari barang yang sama dimiliki kedua supplier (nama sama)
-            Barang barangSup1 = null;
-            Barang barangSup2 = null;
-
-            for (int j = 0; j < barangCount; j++) {
-                if (daftarBarang[j].getSupplier() == sup1 && daftarBarang[j].getClass().getSimpleName()
-                        .equalsIgnoreCase(jenisBarang[i].replaceAll("\\s", ""))) {
-                    barangSup1 = daftarBarang[j];
-                    break;
-                }
-            }
-            for (int j = 0; j < barangCount; j++) {
-                if (daftarBarang[j].getSupplier() == sup2 && daftarBarang[j].getClass().getSimpleName()
-                        .equalsIgnoreCase(jenisBarang[i].replaceAll("\\s", ""))) {
-                    barangSup2 = daftarBarang[j];
-                    break;
-                }
-            }
-
-            if (barangSup1 == null) {
-                System.out.println("  Tidak ada barang dari supplier " + sup1.getNamaSupplier());
-                continue;
-            }
-            if (barangSup2 == null) {
-                System.out.println("  Tidak ada barang dari supplier " + sup2.getNamaSupplier());
-                continue;
-            }
-
-            // Hitung total modal (stok * harga)
-            double totalModalSup1 = barangSup1.getStok() * barangSup1.getHarga();
-            double totalModalSup2 = barangSup2.getStok() * barangSup2.getHarga();
-
-            System.out.printf("  Supplier %s - Barang: %s, Stok: %d, Harga: Rp %.2f, Total Modal: Rp %.2f\n",
-                    sup1.getNamaSupplier(), barangSup1.getNamaBarang(), barangSup1.getStok(), barangSup1.getHarga(),
-                    totalModalSup1);
-
-            System.out.printf("  Supplier %s - Barang: %s, Stok: %d, Harga: Rp %.2f, Total Modal: Rp %.2f\n",
-                    sup2.getNamaSupplier(), barangSup2.getNamaBarang(), barangSup2.getStok(), barangSup2.getHarga(),
-                    totalModalSup2);
-
-            if (totalModalSup1 < totalModalSup2) {
-                System.out
-                        .println("  Supplier " + sup1.getNamaSupplier() + " lebih menguntungkan (modal lebih kecil).");
-            } else if (totalModalSup1 > totalModalSup2) {
-                System.out
-                        .println("  Supplier " + sup2.getNamaSupplier() + " lebih menguntungkan (modal lebih kecil).");
-            } else {
-                System.out.println("  Modal kedua supplier sama.");
-            }
-        }
+        suppliers[supplierCount++] = s;
     }
 }
