@@ -1,19 +1,53 @@
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 public class MakanMinum extends Barang {
     private String kadaluarsa;
+    private String namaMakanMinum;
 
-    public MakanMinum(String namaBarang, double harga, int stok, String kadaluarsa, Supplier supplier) {
-        super(namaBarang, harga, stok, supplier);
+    public MakanMinum(String namaMakanan, String kadaluarsa, String namaMinum, String kode, String namaBarang,
+            double hargaJual, double hargaBeli, int stok, Supplier pemasok) {
+        super(kode, namaBarang, hargaJual, hargaBeli, stok, pemasok);
+        this.namaMakanMinum = namaMakanan + " & " + namaMinum;
+        this.kadaluarsa = kadaluarsa;
+    }
+
+    public String getNamaMakanMinum() {
+        return namaMakanMinum;
+    }
+
+    public void setNamaMakanan(String namaMakanan) {
+        this.namaMakanMinum = namaMakanan;
+    }
+
+    public String getKadaluarsa() {
+        return kadaluarsa;
+    }
+
+    public void setKadaluarsa(String kadaluarsa) {
         this.kadaluarsa = kadaluarsa;
     }
 
     @Override
-    public void tampilInfo() {
-        System.out.printf("Makanan/Minuman: %s, Harga: %.2f, Stok: %d, Kadaluarsa: %s, Supplier: %s\n",
-                namaBarang, harga, stok, kadaluarsa, supplier.getNamaSupplier());
+    public boolean cekKadaluwarsa() {
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+            LocalDate tanggalKadaluarsa = LocalDate.parse(this.kadaluarsa, formatter);
+            return tanggalKadaluarsa.isBefore(LocalDate.now());
+        } catch (Exception e) {
+            return false; // Jika parsing gagal, dianggap belum kadaluarsa
+        }
     }
 
     @Override
-    public boolean cekKadaluwarsa() {
-        return kadaluarsa.compareTo("2024-12-31") < 0;
+    public void tampilkanInfo() {
+        System.out.println("Kode Barang   : " + getKode());
+        System.out.println("Nama Barang   : " + getNamaBarang());
+        System.out.println("Harga Beli    : " + getHargaBeli());
+        System.out.println("Harga Jual    : " + getHargaJual());
+        System.out.println("Stok          : " + getStok());
+        System.out.println("Kadaluarsa    : " + getKadaluarsa());
+        System.out.println("Supplier      : " + getPemasok().getNamaPerusahaan());
     }
+
 }
