@@ -1,36 +1,75 @@
 public abstract class Barang {
+    protected String kode;
     protected String namaBarang;
-    protected double harga;
+    protected double hargaJual;
+    protected double hargaBeli;
     protected int stok;
-    protected Supplier supplier;
+    protected Supplier pemasok;
 
-    public Barang(String namaBarang, double harga, int stok, Supplier supplier) {
+    public Barang(String kode, String namaBarang, double hargaJual, double hargaBeli, int stok, Supplier pemasok) {
+        this.kode = kode;
         this.namaBarang = namaBarang;
-        this.harga = harga;
+        this.hargaJual = hargaJual;
+        this.hargaBeli = hargaBeli;
         this.stok = stok;
-        this.supplier = supplier;
+        this.pemasok = pemasok;
     }
 
-    public abstract void tampilInfo();
-    public abstract boolean cekKadaluwarsa();
-
-    public String getNamaBarang() {
-        return namaBarang;
+    public String getKode() {
+        return kode;
     }
 
-    public double getHarga() {
-        return harga;
+    public void setKode(String kode) {
+        this.kode = kode;
+    }
+
+    public void setNamaBarang(String nama) {
+        this.namaBarang = nama;
+    }
+
+    public double getHargaJual() {
+        return hargaJual;
+    }
+
+    public void setHargaJual(double harga) {
+        this.hargaJual = harga;
+    }
+
+    public double getHargaBeli() {
+        return hargaBeli;
+    }
+
+    public void setHargaBeli(double harga) {
+        this.hargaBeli = harga;
     }
 
     public int getStok() {
         return stok;
     }
 
-    public Supplier getSupplier() {
-        return supplier;
+    public void setStok(int stok) {
+        this.stok = stok;
+    }
+
+    public Supplier getPemasok() {
+        return pemasok;
+    }
+
+    public void setPemasok(Supplier p) {
+        this.pemasok = p;
     }
 
     public void kurangiStok(int jumlah) {
-        stok -= jumlah;
+        this.stok -= jumlah;
     }
+
+    public double hitungLaba() {
+        return hargaJual - hargaBeli;
+    }
+    public String getNamaBarang(){
+        return namaBarang;
+    }
+
+    public abstract void tampilkanInfo();
+    public abstract boolean cekKadaluwarsa();
 }
