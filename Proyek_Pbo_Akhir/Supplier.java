@@ -1,27 +1,45 @@
 public class Supplier {
-    private String namaSupplier;
     private String namaPerusahaan;
-    private String noTlp;
+    private String kode;
+    private String noHp;
+    private String kategori;
 
-    public Supplier(String namaSupplier, String namaPerusahaan, String noTlp) {
-        this.namaSupplier = namaSupplier;
+    public Supplier(String namaPerusahaan, String kode, String noHp, String kategori) {
         this.namaPerusahaan = namaPerusahaan;
-        this.noTlp = noTlp;
+        this.kode = kode;
+        this.noHp = noHp;
+        this.kategori = kategori;
     }
 
-    public String getNamaSupplier() {
-        return namaSupplier;
+    public String getKategori(){
+        return kategori;
     }
 
     public String getNamaPerusahaan() {
         return namaPerusahaan;
     }
 
-    public String getNoTlp() {
-        return noTlp;
+    public void setNamaPerusahaan(String namaPerusahaan) {
+        this.namaPerusahaan = namaPerusahaan;
     }
 
-    public void tampilInfoSupplier() {
-        System.out.printf("Supplier: %s, Perusahaan: %s, No.Telp: %s\n", namaSupplier, namaPerusahaan, noTlp);
+    public String getKode() {
+        return kode;
+    }
+
+    public void setKode(String kode) {
+        this.kode = kode;
+    }
+
+    public String getNoHp() {
+        return noHp;
+    }
+
+    public void setNoHp(String noHp) {
+        this.noHp = noHp;
+    }
+
+    public void tampilkanInfo() {
+        System.out.printf("| %-20s | %-10s | %-15s |\n", namaPerusahaan, kode, noHp);
     }
 }
